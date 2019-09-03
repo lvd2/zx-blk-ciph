@@ -6,18 +6,27 @@ Currently there are aes128, blowfish and speck ciphers available.
 This is still a 'proof-of-concept' project, so there are no Z80 decryptors, only *en*cryptors.
 
 The framework contains some test vectors (key, plaintext, ciphertext) and
-applies them to the corresponding cipher implementations. Use make GCRYPT=1 to
-build with gcrypt support (only for AES and Blowfish).
+applies them to the corresponding cipher implementations.
+
+The framework uses modified libz80 to count cycles of the simulated Z80
+execution. The execution ends as soon as `HALT` is executed and the consumed
+number of cycles returned to the caller.
+
+The pasmo assembler is also modified to support for some synonyms, like `exd`
+for `ex de,hl` or `exa` for `ex af,af'`. More synonyms for index register
+halves are added too.
+
+Use `make GCRYPT=1` to build with gcrypt support (only for AES and Blowfish).
 
 Build instructions:
 0. go to directory
  cd tst/src
 1. build pasmo assembler:
- cd pasmo
- ./configure
+ cd pasmo;
+ ./configure;
  make
 2. build libz80 library:
- cd libz80
+ cd libz80;
  make
 3. build tests:
  make
