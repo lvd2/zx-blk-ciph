@@ -38,7 +38,7 @@ Build instructions:
  make
 ```
 
-3. build libkeccak.so from XKPC project (https://github.com/XKCP/XKCP.git). Use 'make asmX86-64/libkeccak.so' for generic amd64 build. You might try generic32/libkeccak.so for other 32bit platforms as first try. This repo contain already contains libkeccak.so for amd64, feel free to re-build.
+3. build libkeccak.so from XKPC project (https://github.com/XKCP/XKCP.git). Use `make asmX86-64/libkeccak.so` for generic amd64 build. You might try generic32/libkeccak.so for other 32bit platforms as a first try. This repo contain already contains libkeccak.so for amd64, feel free to re-build it.
 
 4. build tests:
 ```
