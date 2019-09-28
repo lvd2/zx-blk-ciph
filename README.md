@@ -1,12 +1,12 @@
 # zx-blk-ciph
 Test framework for Z80 ciphers.
 
-Currently there are aes128, blowfish and speck ciphers available.
+Currently there are only aes128, blowfish and speck ciphers and keccak hash available.
 
 This is still a 'proof-of-concept' project, so there are no Z80 decryptors, only *en*cryptors.
 
 The framework contains some test vectors (key, plaintext, ciphertext) and
-applies them to the corresponding cipher implementations.
+applies them to the corresponding cipher or hash implementations.
 
 The framework uses modified libz80 to count cycles of the simulated Z80
 execution. The execution ends as soon as `HALT` is executed and the consumed
@@ -38,7 +38,9 @@ Build instructions:
  make
 ```
 
-3. build libkeccak.so from XKPC project (https://github.com/XKCP/XKCP.git). Use `make asmX86-64/libkeccak.so` for generic amd64 build. You might try generic32/libkeccak.so for other 32bit platforms as a first try. This repo contain already contains libkeccak.so for amd64, feel free to re-build it.
+3. build libkeccak.so from XKPC project (https://github.com/XKCP/XKCP.git). Use `make asmX86-64/libkeccak.so`
+for generic amd64 build. You might try generic32/libkeccak.so for other 32bit platforms as a first try.
+This repo already contains libkeccak.so for amd64, but feel free to re-build it.
 
 4. build tests:
 ```
