@@ -1,7 +1,8 @@
 EXE = main
-OBJS = main.o tests-cipher.o run-test.o z80-wrap.o        \
-       my-c-bf.o my-c-aes128.o my-t-aes128.o my-c-speck.o \
-       my-z80-aes128.o my-z80-bf.o my-z80-speck.o
+OBJS = main.o tests-cipher.o tests-hash.o run-test.o z80-wrap.o \
+       my-c-bf.o my-c-aes128.o my-t-aes128.o my-c-speck.o       \
+       my-z80-aes128.o my-z80-bf.o my-z80-speck.o               \
+       keccak-ref.o keccak-my.o keccak-nagy-z80.o
 
 GCRYPT ?= 0
 
@@ -19,13 +20,13 @@ ifeq ($(GCRYPT),1)
 endif
 
 
-LDFLAGS = -Llibz80 -lz80
+LDFLAGS = -Llibz80 -lz80 -Llibkeccak -lkeccak
 
 ifeq ($(GCRYPT),1)
  LDFLAGS += -lgcrypt
 endif
 
-LDFLAGS += -Wl,-rpath,libz80 
+LDFLAGS += -Wl,-rpath,libz80 -Wl,-rpath,libkeccak
 
 
 SUBDIRS = z80
@@ -36,7 +37,7 @@ SUBDIRS = z80
 
 all: $(EXE) subdirs
 
-main.o: main.c Makefile ciph-common.h my-c-bf.h my-c-aes128.h my-t-aes128.h my-z80-aes128.h my-z80-bf.h my-z80-speck.h run-test.h tests-cipher.h gcrypt-bf.h gcrypt-aes128.h
+main.o: main.c Makefile ciph-common.h hash-common.h my-c-bf.h my-c-aes128.h my-t-aes128.h my-z80-aes128.h my-z80-bf.h my-z80-speck.h keccak-nagy-z80.h keccak-ref.h keccak-my.h run-test.h tests-cipher.h tests-hash.h gcrypt-bf.h gcrypt-aes128.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
@@ -80,13 +81,26 @@ gcrypt-bf.o: gcrypt-bf.c Makefile gcrypt-bf.h ciph-common.h
 
 
 
+keccak-ref.o: keccak-ref.c Makefile keccak-ref.h hash-common.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+keccak-my.o: keccak-my.c Makefile keccak-my.h keccak.inc hash-common.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+keccak-nagy-z80.o: keccak-nagy-z80.c Makefile keccak-nagy-z80.h keccak.inc hash-common.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 
 
 tests-cipher.o: tests-cipher.c Makefile tests-cipher.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-run-test.o: run-test.c Makefile run-test.h ciph-common.h tests-cipher.h
+tests-hash.o: tests-hash.c Makefile tests-hash.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+run-test.o: run-test.c Makefile run-test.h ciph-common.h hash-common.h tests-cipher.h tests-hash.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

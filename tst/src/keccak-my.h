@@ -20,13 +20,33 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef RUN_TESTS_H
-#define RUN_TESTS_H
-
-int run_tests_cipher(const struct tests_cipher tests[], struct ciph_iface *(*mk_ciph)() );
-
-int run_tests_hash(const struct tests_hash tests[], struct hash_iface *(*mk_hash)() );
+#ifndef KECCAK_MY_H
+#define KECCAK_MY_H
 
 
-#endif // RUN_TESTS_H
+
+#define MY_KECCAK_RATE (136)
+
+struct my_keccak
+{
+	unsigned int pos;
+
+	uint64_t state[25];
+};
+
+
+
+struct hash_iface * make_keccak_my(void);
+
+int    keccak_my_hash_init    (struct hash_iface * hash);
+int    keccak_my_hash_start   (struct hash_iface * hash);
+int    keccak_my_hash_addbytes(struct hash_iface * hash, uint8_t * message, size_t size);
+size_t keccak_my_hash_getsize (struct hash_iface * hash);
+int    keccak_my_hash_result  (struct hash_iface * hash, uint8_t * result);
+void   keccak_my_hash_deinit  (struct hash_iface * hash);
+
+
+
+
+#endif // KECCAK_MY_H
 

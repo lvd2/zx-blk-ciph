@@ -20,13 +20,29 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef RUN_TESTS_H
-#define RUN_TESTS_H
+#ifndef HASH_COMMON_H
+#define HASH_COMMON_H
 
-int run_tests_cipher(const struct tests_cipher tests[], struct ciph_iface *(*mk_ciph)() );
+// common iface to call any hashes
 
-int run_tests_hash(const struct tests_hash tests[], struct hash_iface *(*mk_hash)() );
+struct hash_iface
+{
+	void * hash_specific_data; // for a hash, its specific data (like state)
+
+	const char * name;
+
+	int    (*hash_init)    (struct hash_iface * hash); // 0 is failure
+	int    (*hash_start)   (struct hash_iface * hash); // 0 is failure
+	int    (*hash_addbytes)(struct hash_iface * hash, uint8_t * message, size_t size); // 0 is failure
+	size_t (*hash_getsize) (struct hash_iface * hash); // returns size of the result in bytes
+	int    (*hash_result)  (struct hash_iface * hash, uint8_t * result); // 0 is failure. result is written at the given pointer
+
+	void (*hash_deinit)(struct hash_iface * hash);
+};
 
 
-#endif // RUN_TESTS_H
+
+
+
+#endif // HASH_COMMON_H
 

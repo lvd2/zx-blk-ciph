@@ -20,13 +20,29 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef RUN_TESTS_H
-#define RUN_TESTS_H
+#ifndef TESTS_HASH_H
+#define TESTS_HASH_H
 
-int run_tests_cipher(const struct tests_cipher tests[], struct ciph_iface *(*mk_ciph)() );
+#define HASH_TYPE_HEX (0)
+#define HASH_TYPE_STR (1)
+#define HASH_TYPE_ARR (2)
 
-int run_tests_hash(const struct tests_hash tests[], struct hash_iface *(*mk_hash)() );
+struct tests_hash
+{
+	int type; // HASH_TYPE_HEX or HASH_TYPE_STR
+
+	unsigned int repetitions; // how many times input message should be repeated to the hash function
+
+	size_t msg_len; // length of message for HASH_TYPE_ARR, otherwise ignored
+	const char * message; // pointer to the string (for HASH_TYPE_STR) or to hex-string (HASH_TYPE_HEX) or byte array (HASH_TYPE_ARR)
+
+	const char * hex_result;
+};
 
 
-#endif // RUN_TESTS_H
+extern const struct tests_hash keccak_256[];      //
+extern const struct tests_hash long_keccak_256[]; // r=512, no SHA3 suffix, only 10*1 padding
+
+
+#endif // TESTS_HASH_H
 

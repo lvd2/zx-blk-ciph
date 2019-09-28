@@ -26,7 +26,9 @@
 #include <string.h>
 
 #include "tests-cipher.h"
+#include "tests-hash.h"
 #include "ciph-common.h"
+#include "hash-common.h"
 #include "run-test.h"
 
 static uint8_t * hex2bin (const char * hex);
@@ -156,6 +158,137 @@ int run_tests_cipher(const struct tests_cipher tests[], struct ciph_iface *(*mk_
 
 	(*ciph->ciph_deinit)(ciph);	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int run_tests_hash(const struct tests_hash tests[], struct hash_iface *(*mk_hash)() )
+{
+	struct hash_iface * hash = (*mk_hash)();
+
+	const struct tests_hash * test = tests;
+
+	uint8_t * msg;
+	size_t    size;
+
+	uint8_t * ref;
+	size_t    ref_size;
+	uint8_t * res;
+	size_t    res_size;
+
+
+
+	(*hash->hash_init)(hash);
+
+	while( test->hex_result && test->repetitions )
+	{
+		if( test->type==HASH_TYPE_HEX )
+		{
+			size = hex2size( test->message );
+			msg  = hex2bin ( test->message );
+		}
+		else if( test->type==HASH_TYPE_STR )
+		{
+			size = strlen( test->message );
+			msg = malloc(size);
+			if( !msg )
+			{
+				fprintf(stderr,"%s: %d, %s: can't allocate storage for temporary space!\n",__FILE__,__LINE__,__func__);
+				exit(1);
+			}
+
+			memcpy(msg,test->message,size);
+		}
+		else if( test->type==HASH_TYPE_ARR )
+		{
+			size = test->msg_len;
+			msg = malloc(size);
+			if( !msg )
+			{
+				fprintf(stderr,"%s: %d, %s: can't allocate storage for temporary space!\n",__FILE__,__LINE__,__func__);
+				exit(1);
+			}
+
+			memcpy(msg,test->message,size);
+		}
+		else
+		{
+			fprintf(stderr,"%s: %d, %s: wrong type=%d!\n",__FILE__,__LINE__,__func__,test->type);
+			exit(1);
+		}
+
+
+		(*hash->hash_start)(hash);
+
+		for(unsigned int i=0;i<test->repetitions;i++)
+		{
+			(*hash->hash_addbytes)(hash,msg,size);
+		}
+
+
+		res_size = (*hash->hash_getsize)(hash);
+		res = malloc(res_size);
+		if( !res )
+		{
+			fprintf(stderr,"%s: %d, %s: can't allocate storage for temporary space!\n",__FILE__,__LINE__,__func__);
+			exit(1);
+		}
+
+		(*hash->hash_result)(hash,res);
+	
+
+		ref_size = hex2size( test->hex_result );
+		ref      = hex2bin ( test->hex_result );
+
+		if( res_size!=ref_size )
+		{
+			fprintf(stderr,"%s: %d, %s: hash size mismatch!\n",__FILE__,__LINE__,__func__);
+			fprintf(stderr,"note: name=\"%s\"\n",hash->name);
+			fprintf(stderr,"note: reference size=%ld, resulting hash size=%ld\n",ref_size,res_size);
+			exit(1);
+		}
+
+
+		if( memcmp(res,ref,res_size) )
+		{
+			fprintf(stderr,"%s: %d, %s: hash mismatch!\n",__FILE__,__LINE__,__func__);
+			fprintf(stderr,"note: name=\"%s\"\n",hash->name);
+			fprintf(stderr,"note: reference hash (first 8 bytes): %016lx\n",__builtin_bswap64(*(uint64_t *)ref));
+			fprintf(stderr,"note:    actual hash (first 8 bytes): %016lx\n",__builtin_bswap64(*(uint64_t *)res));
+			exit(1);
+		}
+
+
+		free(ref);free(res);
+		free(msg);
+
+		test++;
+	}
+
+
+	(*hash->hash_deinit)(hash);
+}
+
+
+
+
+
+
+
+
+
 
 
 

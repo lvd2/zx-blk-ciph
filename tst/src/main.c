@@ -27,6 +27,7 @@
 
 #include "libz80/z80.h"
 #include "ciph-common.h"
+#include "hash-common.h"
 
 #ifdef GCRYPT
  #include "gcrypt-aes128.h"
@@ -43,11 +44,41 @@
 #include "my-c-speck.h"
 #include "my-z80-speck.h"
 
+#include "keccak-ref.h"
+#include "keccak-my.h"
+#include "keccak-nagy-z80.h"
+
 #include "tests-cipher.h"
+#include "tests-hash.h"
 #include "run-test.h"
+
+
+
+
+struct hash_run
+{
+	struct hash_iface * (*make_function)(void);
+	const struct tests_hash * tests;
+	const char * what;
+};
+
+
+
 
 int main(int argc, char ** argv)
 {
+	int t_aes=0;
+	int t_bf=0;
+	int t_speck=0;
+	int t_keccak=0;
+
+	int t_z80=0;
+
+	int t_long_keccak=0;
+
+
+
+
 #ifdef GCRYPT
 	run_tests_cipher(bf_tests,     &make_gcrypt_bf    );
 	run_tests_cipher(aes128_tests, &make_gcrypt_aes128);
@@ -59,46 +90,101 @@ int main(int argc, char ** argv)
 	run_tests_cipher(aes128_tests, &make_my_t_aes128);
 	run_tests_cipher(speck_tests,  &make_my_c_speck );
 
+	run_tests_hash(keccak_256, &make_keccak_ref);
+	run_tests_hash(keccak_256, &make_keccak_my );
 
-	int t_aes=1;
-	int t_bf=1;
-	int t_speck=1;
 
+
+
+
+	// parse arguments
 	if( argc>=2 )
 	{
-		t_aes   =0;
-		t_bf    =0;
-		t_speck =0;
+		int i=1;
 
-		     if( !strcasecmp(argv[1],"aes") )
-			t_aes=1;
-		else if( !strcasecmp(argv[1],"bf") )
-			t_bf=1;
-		else if( !strcasecmp(argv[1],"speck") )
-			t_speck=1;
-		else
+		do
 		{
-			printf("no args -- all tests, AES BF or SPECK -- specific test\n");
-			exit(1);
+			char * arg=argv[i];
+
+			     if( !strcasecmp(arg,"aes"       ) )
+				t_aes=1;
+			else if( !strcasecmp(arg,"bf"        ) )
+				t_bf=1;
+			else if( !strcasecmp(arg,"speck"     ) )
+				t_speck=1;
+			else if( !strcasecmp(arg,"z80"       ) )
+				t_z80=1;
+			else if( !strcasecmp(arg,"longkeccak") )
+				t_long_keccak=1;
+			else if( !strcasecmp(arg,"keccak"    ) )
+				t_keccak=1;
+			else
+			{
+				printf("arguments: 'aes, 'bf' or 'speck' -- run specific Z80 tests,\n"
+				       "           'keccak'              -- run Nagy's Z80 keccak test,\n"
+				       "           'z80'                 -- run all fast Z80 tests,\n"
+				       "           'longkeccak'          -- run all long keccak tests\n"
+				       "           no arguments          -- run only fast non-Z80 tests\n");
+				exit(1);
+			}
+
+		} while( (++i)<argc );
+	}
+
+
+
+
+
+
+
+	// long keccak tests
+	if( t_long_keccak )
+	{
+		static struct hash_run hash[] =
+		{
+			{ &make_keccak_ref, long_keccak_256, "LOONG reference keccak" },
+			{ &make_keccak_my,  long_keccak_256, "LOONG my keccak" },
+			{ NULL, NULL, NULL }
+		};
+
+		struct hash_run * curr = hash;
+
+		while( curr->make_function )
+		{
+			printf("Running %s\n",curr->what);
+			run_tests_hash(curr->tests, curr->make_function);
+			curr++;
+		}
+
+		if( t_keccak )
+		{
+			printf("Running LOONG Nagy's Z80 keccak\n");
+			run_tests_hash(long_keccak_256, &make_keccak_nagy_z80);
 		}
 	}
 	
-	
+
 	// z80-related tests
-	if( t_aes )
+	if( t_aes || t_z80 )
 	{
 		run_tests_cipher(aes128_tests, &make_my_z80_aes128);
 	}
 	
-	if( t_bf )
+	if( t_bf || t_z80 )
 	{
 		run_tests_cipher(bf_tests,     &make_my_z80_bf);
 	}
 	
-	if( t_speck )
+	if( t_speck || t_z80 )
 	{
 		run_tests_cipher(speck_tests,  &make_my_z80_speck);
 	}
+
+	if( t_keccak || t_z80 )
+	{
+		run_tests_hash(keccak_256, &make_keccak_nagy_z80);
+	}
+
 
 
 	printf("Tests passed!\n");
